@@ -34,7 +34,10 @@ jobs:
       
       - name: Get Terraform Outputs
         id: tf-output
-        run: echo "EC2_PUBLIC_IP=$(terraform output -raw ec2_public_ip)" >> $GITHUB_ENV
+        run: echo "::set-output name=EC2_PUBLIC_IP::$(terraform output -raw ec2_public_ip)"
+
+      outputs:
+        EC2_PUBLIC_IP: ${{ steps.tf-output.outputs.EC2_PUBLIC_IP }}
   
   configure-instance:
     name: Configure EC2 and Deploy Containers
@@ -44,7 +47,7 @@ jobs:
       AWS_REGION: eu-north-1
       SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
       EC2_USER: ubuntu
-      EC2_HOST: ${{ env.EC2_PUBLIC_IP }}
+      EC2_HOST: ${{ needs.terraform.outputs.EC2_PUBLIC_IP }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
