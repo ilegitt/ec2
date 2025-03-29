@@ -1,4 +1,4 @@
-name: Deploy EC2 with Terraform
+name: Deploy EC2 with Terraform and Docker
 
 on:
   push:
@@ -31,14 +31,15 @@ jobs:
       
       - name: Apply Terraform
         run: terraform apply -auto-approve
-      
+
       - name: Get Terraform Outputs
         id: tf-output
-        run: echo "EC2_PUBLIC_IP=$(terraform output -raw ec2_public_ip)" >> $GITHUB_OUTPUT
-
+        run: |
+          echo "EC2_PUBLIC_IP=$(terraform output -raw ec2-public_ip)" >> $GITHUB_ENV
+          
     outputs:
       EC2_PUBLIC_IP: ${{ steps.tf-output.outputs.EC2_PUBLIC_IP }}
-  
+
   configure-instance:
     name: Configure EC2 and Deploy Containers
     runs-on: ubuntu-latest
@@ -47,7 +48,7 @@ jobs:
       AWS_REGION: eu-north-1
       SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
       EC2_USER: ubuntu
-      EC2_HOST: ${{ needs.terraform.outputs.EC2_PUBLIC_IP }}
+      EC2_HOST: ${{ env.EC2_PUBLIC_IP }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
