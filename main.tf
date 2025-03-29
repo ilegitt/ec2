@@ -3,15 +3,15 @@ provider "aws" {
 }
 
 resource "aws_vpc" "myapp-vpc" {
-    cidr_block = var.vpc_cidr_block
-    tags = {
-        Name = "${var.env_prefix}-vpc"
+  cidr_block = var.vpc_cidr_block
+  tags = {
+    Name = "${var.env_prefix}-vpc"
   }
 }
 
 resource "aws_subnet" "myapp-subnet-1" {
-  vpc_id     = aws_vpc.myapp-vpc.id
-  cidr_block = var.subnet_cidr_block
+  vpc_id            = aws_vpc.myapp-vpc.id
+  cidr_block        = var.subnet_cidr_block
   availability_zone = var.avail_zone
   tags = {
     Name = "${var.env_prefix}-subnet-1"
@@ -41,24 +41,24 @@ resource "aws_default_security_group" "default-sg" {
   vpc_id = aws_vpc.myapp-vpc.id
 
   ingress {
-    from_port = 22
-    to_port = 22
-    protocol = "TCP"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "TCP"
     cidr_blocks = [var.my_ip]
   }
 
   ingress {
-    from_port = 8080
-    to_port = 8080
-    protocol = "TCP"
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "TCP"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
+    cidr_blocks     = ["0.0.0.0/0"]
     prefix_list_ids = []
   }
 
@@ -69,13 +69,13 @@ resource "aws_default_security_group" "default-sg" {
 
 data "aws_ami" "latest-amazon-linux-image" {
   most_recent = true
-  owners = ["amazon"]
+  owners      = ["amazon"]
   filter {
-    name = "name" 
+    name   = "name"
     values = ["amzn2-ami-kernel-*-x86_64-gp2"]
   }
   filter {
-    name = "virtualization-type"
+    name   = "virtualization-type"
     values = ["hvm"]
   }
 }
@@ -88,23 +88,31 @@ output "ec2-public_ip" {
   value = aws_instance.myapp-server.public_ip
 }
 
+resource "tls_private_key" "my_key" {
+  algorithm = "RSA"
+  rsa_bits  = 2048
+}
+
 resource "aws_key_pair" "ssh-key" {
-  key_name = "server-key"
-  public_key = file(var.public_key_location)
+  key_name   = "server-key"
+  public_key = tls_private_key.my_key.public_key_openssh
 }
 
 resource "aws_instance" "myapp-server" {
-  ami = data.aws_ami.latest-amazon-linux-image.id
-  instance_type = var.instance_type
-
-  subnet_id = aws_subnet.myapp-subnet-1.id
+  ami                    = data.aws_ami.latest-amazon-linux-image.id
+  instance_type          = var.instance_type
+  subnet_id              = aws_subnet.myapp-subnet-1.id
   vpc_security_group_ids = [aws_default_security_group.default-sg.id]
-  availability_zone = var.avail_zone
-
+  availability_zone      = var.avail_zone
   associate_public_ip_address = true
   key_name = aws_key_pair.ssh-key.key_name
 
   tags = {
     Name = "${var.env_prefix}-server"
   }
+}
+
+output "private_key" {
+  value     = tls_private_key.my_key.private_key_pem
+  sensitive = true
 }
