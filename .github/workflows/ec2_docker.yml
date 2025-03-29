@@ -62,7 +62,7 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST 'bash -s' < ./entry_script.sh
       
-      - name: Deploy Docker container
+      - name: Deploy Docker containers
         run: |
           scp -o StrictHostKeyChecking=no docker-compose.yml $EC2_USER@$EC2_HOST:/home/$EC2_USER/
           ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST 'docker-compose up -d'
