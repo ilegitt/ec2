@@ -1,4 +1,4 @@
-name: Deploy EC2 with Terraform
+name: Deploy EC2 with Terraform and Docker
 
 on:
   push:
@@ -34,8 +34,8 @@ jobs:
       
       - name: Get Terraform Outputs
         id: tf-output
-        run: echo "EC2_PUBLIC_IP=$(terraform output -raw ec2_public_ip 2>/dev/null)" >> $GITHUB_OUTPUT
-        
+        run: echo "EC2_PUBLIC_IP=$(terraform output -raw ec2_public_ip)" >> $GITHUB_OUTPUT
+
     outputs:
       EC2_PUBLIC_IP: ${{ steps.tf-output.outputs.EC2_PUBLIC_IP }}
   
@@ -46,8 +46,8 @@ jobs:
     env:
       AWS_REGION: eu-north-1
       SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-      EC2_USER: ubuntu
-      EC2_HOST: ${{ needs.terraform.outputs.EC2_PUBLIC_IP }}
+      EC2_USER: ec2-user
+      EC2_PUBLIC_IP: ${{ needs.terraform.outputs.EC2_PUBLIC_IP }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -60,9 +60,9 @@ jobs:
       
       - name: Run configuration script on EC2
         run: |
-          ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST 'bash -s' < ./entry_script.sh
+          ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_PUBLIC_IP 'bash -s' < ./entry_script.sh
       
       - name: Deploy Docker containers
         run: |
-          scp -o StrictHostKeyChecking=no docker-compose.yml $EC2_USER@$EC2_HOST:/home/$EC2_USER/
-          ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST 'docker-compose up -d'
+          scp -o StrictHostKeyChecking=no docker-compose.yml $EC2_USER@$EC2_PUBLIC_IP:/home/$EC2_USER/
+          ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_PUBLIC_IP 'docker-compose up -d'
