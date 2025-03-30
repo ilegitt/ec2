@@ -34,10 +34,10 @@ jobs:
       
       - name: Get Terraform Outputs
         id: tf-output
-        run: echo "EC2_PUBLIC_IP=$(terraform output -raw ec2_public_ip)" >> $GITHUB_OUTPUT
+        run: echo "EC2_PUBLIC_IP=$(terraform output -raw ec2_public_ip)" >> $GITHUB_ENV
 
     outputs:
-      EC2_PUBLIC_IP: ${{ steps.tf-output.outputs.EC2_PUBLIC_IP }}
+      EC2_PUBLIC_IP: ${{ env.EC2_PUBLIC_IP }}
   
   configure-instance:
     name: Configure EC2 and Deploy Containers
