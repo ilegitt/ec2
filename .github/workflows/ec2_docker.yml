@@ -1,4 +1,4 @@
-name: Deploy EC2 with Terraforms
+name: Deploy EC2 with Terraform
 
 on:
   push:
