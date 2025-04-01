@@ -133,20 +133,20 @@ resource "aws_instance" "myapp-server" {
     version: '3.8'
     services:
       web:
-        image: <aws_account_id>.dkr.ecr.us-east-1.amazonaws.com/my-app:latest
+        image: 180294207856.dkr.ecr.eu-north-1.amazonaws.com/master:latest
         ports:
           - '8080:8080'
         environment:
           - POSTGRES_HOST=postgres
-          - POSTGRES_DB=mydatabase
-          - POSTGRES_USER=myuser
-          - POSTGRES_PASSWORD=mypassword
+          - POSTGRES_DB=yourdb
+          - POSTGRES_USER=youruser
+          - POSTGRES_PASSWORD=yourpassword
       postgres:
         image: postgres:latest
         environment:
-          POSTGRES_USER: myuser
-          POSTGRES_PASSWORD: mypassword
-          POSTGRES_DB: mydatabase
+          POSTGRES_USER: youruser
+          POSTGRES_PASSWORD: yourpassword
+          POSTGRES_DB: yourdb
         ports:
           - '5432:5432'
         volumes:
